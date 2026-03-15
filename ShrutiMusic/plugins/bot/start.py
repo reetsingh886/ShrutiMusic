@@ -26,7 +26,7 @@ async def start_pm(client, message: Message):
             ],
             [
                 InlineKeyboardButton("NETWORKS", callback_data="bot_stats"),
-                InlineKeyboardButton("DEVELOPER", url=config.OWNER_LINK),
+                InlineKeyboardButton("DEVELOPER", url="https://t.me/iamthakur007"),
             ],
             [
                 InlineKeyboardButton("FUNCTIONS + COMMANDS", callback_data="help_back")
@@ -70,7 +70,7 @@ async def start_gp(client, message: Message):
             ],
             [
                 InlineKeyboardButton("NETWORKS", callback_data="bot_stats"),
-                InlineKeyboardButton("DEVELOPER", url=config.OWNER_LINK),
+                InlineKeyboardButton("DEVELOPER", url="https://t.me/iamthakur007"),
             ],
             [
                 InlineKeyboardButton("FUNCTIONS + COMMANDS", callback_data="help_back")
