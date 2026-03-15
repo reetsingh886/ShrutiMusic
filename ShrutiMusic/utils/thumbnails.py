@@ -22,7 +22,7 @@
 # ATLEAST GIVE CREDITS IF YOU STEALING :
 # ELSE NO FURTHER PUBLIC THUMBNAIL UPDATES
 
-  import os
+import os
 import re
 import random
 import aiofiles
