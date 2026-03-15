@@ -36,7 +36,7 @@ CACHE_DIR = "cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 # 👉 यहाँ अपनी image लगाओ
-CUSTOM_THUMB = "https://telegra.ph/file/yourimage.jpg"
+CUSTOM_THUMB = "https://files.catbox.moe/jioaei.jpg"
 
 DUAL_TONES = [
     ((20, 20, 20), (240, 240, 240)),
