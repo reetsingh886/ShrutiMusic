@@ -30,10 +30,13 @@ import aiohttp
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from youtubesearchpython.__future__ import VideosSearch
 from config import YOUTUBE_IMG_URL
-from ShrutiMusic import app   # FIXED
+from ShrutiMusic import app
 
 CACHE_DIR = "cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
+
+# 👉 यहाँ अपनी image लगाओ
+CUSTOM_THUMB = "https://telegra.ph/file/yourimage.jpg"
 
 DUAL_TONES = [
     ((20, 20, 20), (240, 240, 240)),
@@ -56,7 +59,12 @@ def trim_to_width(text: str, font: ImageFont.FreeTypeFont, max_w: int) -> str:
     return ellipsis
 
 
-async def gen_thumb(videoid: str, player_username: str = None):  # FIXED NAME
+async def gen_thumb(videoid: str, player_username: str = None):
+
+    # 👉 अगर custom image चाहिए तो सीधे वही return
+    if CUSTOM_THUMB:
+        return CUSTOM_THUMB
+
     if player_username is None:
         player_username = app.username
 
@@ -77,9 +85,6 @@ async def gen_thumb(videoid: str, player_username: str = None):  # FIXED NAME
     except:
         title, thumbnail, duration, views = "Unknown", YOUTUBE_IMG_URL, None, "Unknown"
 
-    is_live = not duration or str(duration).lower() in {"live", "live now", ""}
-    duration_text = "Live" if is_live else duration or "Unknown"
-
     thumb_path = os.path.join(CACHE_DIR, f"thumb_{videoid}.png")
 
     try:
@@ -97,86 +102,14 @@ async def gen_thumb(videoid: str, player_username: str = None):  # FIXED NAME
     overlay = Image.new("RGBA", (1280, 720), (255, 255, 255, 40))
     bg = Image.alpha_composite(bg, overlay)
 
-    thumb = Image.open(thumb_path).resize((520, 520)).convert("RGBA")
-
-    hex_points = [
-        (260, 0),
-        (520, 130),
-        (520, 390),
-        (260, 520),
-        (0, 390),
-        (0, 130),
-    ]
-
-    mask = Image.new("L", (520, 520), 0)
-    draw_mask = ImageDraw.Draw(mask)
-    draw_mask.polygon(hex_points, fill=255)
-
-    hex_thumb = Image.new("RGBA", (520, 520), (0, 0, 0, 0))
-    hex_thumb.paste(thumb, (0, 0), mask)
-
-    border_img = Image.new("RGBA", (600, 600), (0, 0, 0, 0))
-    d = ImageDraw.Draw(border_img)
-
-    offset = 40
-    border_hex = [(x + offset, y + offset) for x, y in hex_points]
-
-    d.polygon(border_hex, outline=(90, 0, 60, 255), width=26)
-    d.polygon(border_hex, outline=(255, 100, 200, 180), width=10)
-    d.polygon(border_hex, outline=(255, 40, 150, 255), width=16)
-
-    bg.paste(border_img, (60, 60), border_img)
-    bg.paste(hex_thumb, (100, 100), hex_thumb)
-
     draw = ImageDraw.Draw(bg)
 
     try:
-        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)   # FIXED
-        meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 26)
-        tag_font = ImageFont.truetype("ShrutiMusic/assets/font2.ttf", 28)
-
+        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)
     except:
-        title_font = meta_font = tag_font = ImageFont.load_default()
+        title_font = ImageFont.load_default()
 
-    title_x = 700
-    title_y = 180
-
-    title_text = trim_to_width(title, title_font, 480)
-    draw.text((title_x, title_y), title_text, fill=(0, 0, 0), font=title_font)
-
-    meta = (
-        f"YouTube | {views}\n"
-        f"Duration | {duration_text}\n"
-        f"Player | @{player_username}\n"
-    )
-
-    draw.multiline_text(
-        (title_x, title_y + 90),
-        meta,
-        fill=(0, 0, 0),
-        spacing=10,
-        font=meta_font,
-    )
-
-    bar_y = title_y + 240
-    bar_w = 390
-
-    draw.rounded_rectangle(
-        (title_x, bar_y, title_x + bar_w, bar_y + 14),
-        8,
-        fill=(255, 255, 255, 80),
-    )
-
-    draw.rounded_rectangle(
-        (title_x, bar_y, title_x + bar_w // 2, bar_y + 14),
-        8,
-        fill=(0, 0, 0),
-    )
-
-    brand = "DEV :- @iamthakur007"
-    w = tag_font.getlength(brand)
-
-    draw.text((1280 - w - 50, 680), brand, fill=(0, 0, 0), font=tag_font)
+    draw.text((700, 200), title, fill=(0, 0, 0), font=title_font)
 
     try:
         os.remove(thumb_path)
@@ -185,4 +118,4 @@ async def gen_thumb(videoid: str, player_username: str = None):  # FIXED NAME
 
     bg.save(cache_path)
     return cache_path
-    
+        
