@@ -1,4 +1,4 @@
-Copyright (c) 2025 Nand Yaduwanshi <NoxxOP>
+# Copyright (c) 2025 Nand Yaduwanshi <NoxxOP>
 # Location: Supaul, Bihar
 #
 # All rights reserved.
@@ -23,6 +23,7 @@ from pyrogram.types import InlineKeyboardButton
 import config
 from ShrutiMusic import app
 
+
 def start_panel(_):
     buttons = [
         [
@@ -33,10 +34,11 @@ def start_panel(_):
         ],
         [
             InlineKeyboardButton(text=_["E_X_1"], url=config.UPSTREAM_REPO),
-            InlineKeyboardButton(text=_["S_B_11"], callback_data="about_page")  # About button
+            InlineKeyboardButton(text=_["S_B_11"], callback_data="about_page")
         ],
     ]
     return buttons
+
 
 def private_panel(_):
     buttons = [
@@ -59,6 +61,7 @@ def private_panel(_):
     ]
     return buttons
 
+
 def about_panel(_):
     buttons = [
         [
@@ -70,6 +73,7 @@ def about_panel(_):
         ]
     ]
     return buttons
+
 
 def owner_panel(_):
     buttons = [
