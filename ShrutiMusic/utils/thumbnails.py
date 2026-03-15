@@ -23,11 +23,10 @@
 # ELSE NO FURTHER PUBLIC THUMBNAIL UPDATES
 
 import os
-import re
-import random
-import aiofiles
 import aiohttp
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+import aiofiles
+import re
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from youtubesearchpython.__future__ import VideosSearch
 from config import YOUTUBE_IMG_URL
 from ShrutiMusic import app
@@ -35,87 +34,105 @@ from ShrutiMusic import app
 CACHE_DIR = "cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-# 👉 यहाँ अपनी image लगाओ
-CUSTOM_THUMB = "https://files.catbox.moe/jioaei.jpg"
 
-DUAL_TONES = [
-    ((20, 20, 20), (240, 240, 240)),
-    ((25, 30, 45), (250, 250, 250)),
-    ((15, 40, 65), (230, 230, 230)),
-    ((55, 10, 80), (255, 245, 255))
-]
+def truncate(text, font, max_width):
+    while font.getlength(text) > max_width:
+        text = text[:-1]
+    return text + "..."
 
 
-def trim_to_width(text: str, font: ImageFont.FreeTypeFont, max_w: int) -> str:
-    ellipsis = "…"
-    try:
-        if font.getlength(text) <= max_w:
-            return text
-        for i in range(len(text) - 1, 0, -1):
-            if font.getlength(text[:i] + ellipsis) <= max_w:
-                return text[:i] + ellipsis
-    except:
-        return text[:max_w // 10] + "…" if len(text) > max_w // 10 else text
-    return ellipsis
-
-
-async def gen_thumb(videoid: str, player_username: str = None):
-
-    # 👉 अगर custom image चाहिए तो सीधे वही return
-    if CUSTOM_THUMB:
-        return CUSTOM_THUMB
+async def gen_thumb(videoid: str, player_username=None):
 
     if player_username is None:
         player_username = app.username
 
-    cache_path = os.path.join(CACHE_DIR, f"{videoid}_hexagon.png")
-    if os.path.exists(cache_path):
-        return cache_path
+    cache = f"{CACHE_DIR}/{videoid}.png"
+    if os.path.exists(cache):
+        return cache
 
     try:
-        results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
-        search = await results.next()
-        data = search.get("result", [])[0]
+        results = VideosSearch(videoid, limit=1)
+        data = (await results.next())["result"][0]
 
-        title = re.sub(r"\W+", " ", data.get("title", "Unknown Title")).title()
-        thumbnail = data.get("thumbnails", [{}])[0].get("url", YOUTUBE_IMG_URL)
-        duration = data.get("duration")
-        views = data.get("viewCount", {}).get("short", "Unknown Views")
+        title = data["title"]
+        duration = data["duration"]
+        views = data["viewCount"]["short"]
+        thumb = data["thumbnails"][0]["url"]
 
     except:
-        title, thumbnail, duration, views = "Unknown", YOUTUBE_IMG_URL, None, "Unknown"
+        title = "Unknown"
+        duration = "Unknown"
+        views = "Unknown"
+        thumb = YOUTUBE_IMG_URL
 
-    thumb_path = os.path.join(CACHE_DIR, f"thumb_{videoid}.png")
+    thumb_path = f"{CACHE_DIR}/thumb_{videoid}.png"
 
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(thumbnail) as r:
-                if r.status == 200:
-                    async with aiofiles.open(thumb_path, "wb") as f:
-                        await f.write(await r.read())
-    except:
-        return YOUTUBE_IMG_URL
+    async with aiohttp.ClientSession() as session:
+        async with session.get(thumb) as r:
+            async with aiofiles.open(thumb_path, "wb") as f:
+                await f.write(await r.read())
 
     bg = Image.open(thumb_path).resize((1280, 720)).convert("RGB")
-    bg = bg.filter(ImageFilter.GaussianBlur(30)).convert("RGBA")
+    bg = bg.filter(ImageFilter.GaussianBlur(35))
 
-    overlay = Image.new("RGBA", (1280, 720), (255, 255, 255, 40))
-    bg = Image.alpha_composite(bg, overlay)
+    overlay = Image.new("RGBA", (1280, 720), (255, 255, 255, 120))
+    bg = Image.alpha_composite(bg.convert("RGBA"), overlay)
+
+    thumb_img = Image.open(thumb_path).resize((360, 360))
+
+    cube = thumb_img.transform(
+        (360, 360),
+        Image.PERSPECTIVE,
+        (1, 0.2, 0, 0.2, 1, 0, 0.001, 0.001),
+        Image.BICUBIC,
+    )
+
+    bg.paste(cube, (120, 180))
 
     draw = ImageDraw.Draw(bg)
 
     try:
-        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)
+        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 45)
+        meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 30)
     except:
-        title_font = ImageFont.load_default()
+        title_font = meta_font = ImageFont.load_default()
 
-    draw.text((700, 200), title, fill=(0, 0, 0), font=title_font)
+    title = re.sub(r"\W+", " ", title)
+    title = truncate(title, title_font, 600)
+
+    draw.text((560, 220), title, fill="black", font=title_font)
+
+    meta = (
+        f"YouTube | {views}\n"
+        f"Duration | {duration}\n"
+        f"Player | @{player_username}"
+    )
+
+    draw.multiline_text(
+        (560, 320),
+        meta,
+        fill="black",
+        font=meta_font,
+        spacing=15
+    )
+
+    draw.rounded_rectangle(
+        (560, 450, 950, 470),
+        radius=10,
+        fill=(200, 200, 200)
+    )
+
+    draw.rounded_rectangle(
+        (560, 450, 750, 470),
+        radius=10,
+        fill=(0, 0, 0)
+    )
+
+    bg.save(cache)
 
     try:
         os.remove(thumb_path)
     except:
         pass
 
-    bg.save(cache_path)
-    return cache_path
-        
+    return cache
