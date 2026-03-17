@@ -1,7 +1,6 @@
 import math
 from pyrogram.types import InlineKeyboardButton
 from ShrutiMusic import app
-import config
 from ShrutiMusic.utils.formatters import time_to_seconds
 
 def track_markup(, videoid, user_id, channel, fplay):
@@ -68,14 +67,14 @@ buttons = [
     ],
     [
         InlineKeyboardButton(text="< - 𝟤𝟢ˢ", callback_data="seek_backward_20"),
-        InlineKeyboardButton(text="𝟤𝟢ˢ + >", callback_data="seek_forward_20")
+        InlineKeyboardButton(text="𝟤𝟢ˢ + >", callback_data="seek_forward_20"),
     ],
     [
         InlineKeyboardButton(
             text="✙ ʌᴅᴅ ϻє ɪη ʏσυʀ ɢʀσυᴘ ✙",
-            url=f"https://t.me/{app.username}?startgroup=true"
+            url=f"https://t.me/{app.username}?startgroup=true",
         ),
-    ]
+    ],
 ]
 return buttons
 
@@ -90,14 +89,14 @@ InlineKeyboardButton(text="▢", callback_data=f"ADMIN Stop|{chat_id}"),
 ],
 [
 InlineKeyboardButton(text="< - 𝟤𝟢ˢ", callback_data="seek_backward_20"),
-InlineKeyboardButton(text="𝟤𝟢ˢ + >", callback_data="seek_forward_20")
+InlineKeyboardButton(text="𝟤𝟢ˢ + >", callback_data="seek_forward_20"),
 ],
 [
 InlineKeyboardButton(
 text="✙ ʌᴅᴅ ϻє ɪη ʏσυʀ ɢʀσυᴘ ✙",
-url=f"https://t.me/{app.username}?startgroup=true"
+url=f"https://t.me/{app.username}?startgroup=true",
 ),
-]
+],
 ]
 return buttons
 
@@ -117,7 +116,7 @@ callback_data=f"ShrutiPlaylists {videoid}|{user_id}|{ptype}|v|{channel}|{fplay}"
 InlineKeyboardButton(
 text=["CLOSE_BUTTON"],
 callback_data=f"forceclose {videoid}|{user_id}",
-),
+)
 ],
 ]
 return buttons
@@ -128,13 +127,13 @@ buttons = [
 InlineKeyboardButton(
 text=["P_B_3"],
 callback_data=f"LiveStream {videoid}|{user_id}|{mode}|{channel}|{fplay}",
-),
+)
 ],
 [
 InlineKeyboardButton(
 text=_["CLOSE_BUTTON"],
 callback_data=f"forceclose {videoid}|{user_id}",
-),
+)
 ],
 ]
 return buttons
