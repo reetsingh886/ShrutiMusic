@@ -30,7 +30,8 @@ def trim_to_width(text: str, font: ImageFont.FreeTypeFont, max_w: int) -> str:
         return text[:max_w//10] + "…" if len(text) > max_w//10 else text
     return ellipsis
 
-async def get_thumb(videoid: str, player_username: str = None) -> str:
+
+async def gen_thumb(videoid: str, player_username: str = None) -> str:
     if player_username is None:
         player_username = app.username
 
@@ -151,5 +152,3 @@ async def get_thumb(videoid: str, player_username: str = None) -> str:
 
     bg.save(cache_path)
     return cache_path
-    
-    
