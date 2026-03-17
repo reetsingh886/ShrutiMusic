@@ -21,8 +21,9 @@
 
 import math
 from pyrogram.types import InlineKeyboardButton
+from ShrutiMusic import app
+import config
 from ShrutiMusic.utils.formatters import time_to_seconds
-from config import BOT_USERNAME
 
 def track_markup(, videoid, user_id, channel, fplay):
 buttons = [
@@ -76,7 +77,7 @@ buttons = [
     [
         InlineKeyboardButton(
             text=f"{played} {bar} {dur}",
-            url=f"https://t.me/{BOT_USERNAME}?startgroup=true"
+            callback_data="GetTimer",
         )
     ],
     [
@@ -87,12 +88,19 @@ buttons = [
         InlineKeyboardButton(text="▢", callback_data=f"ADMIN Stop|{chat_id}"),
     ],
     [
-        InlineKeyboardButton(text=_["CLOSE_BUTTON"], callback_data="close")
+        InlineKeyboardButton(text="< - 𝟤𝟢ˢ", callback_data="seek_backward_20"),
+        InlineKeyboardButton(text="𝟤𝟢ˢ + >", callback_data="seek_forward_20")
     ],
+    [
+        InlineKeyboardButton(
+            text="✙ ʌᴅᴅ ϻє ɪη ʏσυʀ ɢʀσυᴘ ✙",
+            url=f"https://t.me/{app.username}?startgroup=true"
+        ),
+    ]
 ]
 return buttons
 
-def stream_markup(, chat_id):
+def stream_markup(_, chat_id):
 buttons = [
 [
 InlineKeyboardButton(text="▷", callback_data=f"ADMIN Resume|{chat_id}"),
@@ -102,8 +110,15 @@ InlineKeyboardButton(text="‣‣I", callback_data=f"ADMIN Skip|{chat_id}"),
 InlineKeyboardButton(text="▢", callback_data=f"ADMIN Stop|{chat_id}"),
 ],
 [
-InlineKeyboardButton(text=["CLOSE_BUTTON"], callback_data="close")
+InlineKeyboardButton(text="< - 𝟤𝟢ˢ", callback_data="seek_backward_20"),
+InlineKeyboardButton(text="𝟤𝟢ˢ + >", callback_data="seek_forward_20")
 ],
+[
+InlineKeyboardButton(
+text="✙ ʌᴅᴅ ϻє ɪη ʏσυʀ ɢʀσυᴘ ✙",
+url=f"https://t.me/{app.username}?startgroup=true"
+),
+]
 ]
 return buttons
 
@@ -112,11 +127,11 @@ buttons = [
 [
 InlineKeyboardButton(
 text=["P_B_1"],
-callback_data=f"NandPlaylists {videoid}|{user_id}|{ptype}|a|{channel}|{fplay}",
+callback_data=f"ShrutiPlaylists {videoid}|{user_id}|{ptype}|a|{channel}|{fplay}",
 ),
 InlineKeyboardButton(
 text=["P_B_2"],
-callback_data=f"NandPlaylists {videoid}|{user_id}|{ptype}|v|{channel}|{fplay}",
+callback_data=f"ShrutiPlaylists {videoid}|{user_id}|{ptype}|v|{channel}|{fplay}",
 ),
 ],
 [
