@@ -174,4 +174,3 @@ callback_data=f"slider F|{query_type}|{query}|{user_id}|{channel}|{fplay}",
 ],
 ]
 return buttons
- 
