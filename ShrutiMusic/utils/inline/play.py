@@ -1,7 +1,7 @@
 import math
 from pyrogram.types import InlineKeyboardButton
 from ShrutiMusic.utils.formatters import time_to_seconds
-from config import BOT_USERNAME, SUPPORT_GROUP, SUPPORT_CHANNEL
+from config import BOT_USERNAME
 
 
 def track_markup(_, videoid, user_id, channel, fplay):
@@ -26,6 +26,27 @@ def track_markup(_, videoid, user_id, channel, fplay):
 
 
 def stream_markup(_, videoid, user_id, channel, fplay):
+    return [
+        [
+            InlineKeyboardButton(
+                text=_["P_B_1"],
+                callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}",
+            ),
+            InlineKeyboardButton(
+                text=_["P_B_2"],
+                callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text=_["CLOSE_BUTTON"],
+                callback_data=f"forceclose {videoid}|{user_id}",
+            ),
+        ],
+    ]
+
+
+def playlist_markup(_, videoid, user_id, channel, fplay):
     return [
         [
             InlineKeyboardButton(
@@ -117,4 +138,4 @@ def stream_markup_timer(_, chat_id, played, dur):
                 callback_data=f"forceclose {chat_id}"
             )
         ],
-    ]
+                      ]
