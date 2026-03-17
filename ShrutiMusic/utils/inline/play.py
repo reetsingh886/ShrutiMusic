@@ -15,7 +15,7 @@ def track_markup(*args):
             InlineKeyboardButton("⏸", callback_data=f"ADMIN Pause|{chat_id}"),
             InlineKeyboardButton("↻", callback_data=f"ADMIN Replay|{chat_id}"),
             InlineKeyboardButton("⏭", callback_data=f"ADMIN Skip|{chat_id}"),
-            InlineKeyboardButton("⏹", callback_data=f"ADMIN Stop|{chat_id}"),
+            InlineKeyboardButton("▢", callback_data=f"ADMIN Stop|{chat_id}"),
         ],
         [
             InlineKeyboardButton("≡ CLOSE ≡", callback_data=f"forceclose {chat_id}")
@@ -106,7 +106,7 @@ def stream_markup_timer(_, chat_id, played, dur):
             InlineKeyboardButton("⏸", callback_data=f"ADMIN Pause|{chat_id}"),
             InlineKeyboardButton("↻", callback_data=f"ADMIN Replay|{chat_id}"),
             InlineKeyboardButton("⏭", callback_data=f"ADMIN Skip|{chat_id}"),
-            InlineKeyboardButton("⏹", callback_data=f"ADMIN Stop|{chat_id}"),
+            InlineKeyboardButton("▢", callback_data=f"ADMIN Stop|{chat_id}"),
         ],
         [
             InlineKeyboardButton(
