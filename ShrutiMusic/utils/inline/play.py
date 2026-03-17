@@ -26,7 +26,12 @@ return buttons
 def stream_markup_timer(_, chat_id, played, dur):
 played_sec = time_to_seconds(played)
 duration_sec = time_to_seconds(dur)
-percentage = (played_sec / duration_sec) * 100
+
+if duration_sec == 0:
+    percentage = 0
+else:
+    percentage = (played_sec / duration_sec) * 100
+
 umm = math.floor(percentage)
 
 if 0 < umm <= 10:
@@ -64,7 +69,12 @@ buttons = [
         InlineKeyboardButton(text="‣‣I", callback_data=f"ADMIN Skip|{chat_id}"),
         InlineKeyboardButton(text="▢", callback_data=f"ADMIN Stop|{chat_id}"),
     ],
-    [InlineKeyboardButton(text=_["CLOSE_BUTTON"], callback_data="close")],
+    [
+        InlineKeyboardButton(
+            text=_["CLOSE_BUTTON"],
+            callback_data="close",
+        )
+    ],
 ]
 return buttons
 
@@ -77,7 +87,12 @@ InlineKeyboardButton(text="↻", callback_data=f"ADMIN Replay|{chat_id}"),
 InlineKeyboardButton(text="‣‣I", callback_data=f"ADMIN Skip|{chat_id}"),
 InlineKeyboardButton(text="▢", callback_data=f"ADMIN Stop|{chat_id}"),
 ],
-[InlineKeyboardButton(text=["CLOSE_BUTTON"], callback_data="close")],
+[
+InlineKeyboardButton(
+text=["CLOSE_BUTTON"],
+callback_data="close",
+)
+],
 ]
 return buttons
 
@@ -86,18 +101,18 @@ buttons = [
 [
 InlineKeyboardButton(
 text=["P_B_1"],
-callback_data=f"ShrutiPlaylists {videoid}|{user_id}|{ptype}|a|{channel}|{fplay}",
+callback_data=f"MusicPlaylists {videoid}|{user_id}|{ptype}|a|{channel}|{fplay}",
 ),
 InlineKeyboardButton(
 text=["P_B_2"],
-callback_data=f"ShrutiPlaylists {videoid}|{user_id}|{ptype}|v|{channel}|{fplay}",
+callback_data=f"MusicPlaylists {videoid}|{user_id}|{ptype}|v|{channel}|{fplay}",
 ),
 ],
 [
 InlineKeyboardButton(
 text=["CLOSE_BUTTON"],
 callback_data=f"forceclose {videoid}|{user_id}",
-),
+)
 ],
 ]
 return buttons
@@ -108,13 +123,13 @@ buttons = [
 InlineKeyboardButton(
 text=["P_B_3"],
 callback_data=f"LiveStream {videoid}|{user_id}|{mode}|{channel}|{fplay}",
-),
+)
 ],
 [
 InlineKeyboardButton(
 text=_["CLOSE_BUTTON"],
 callback_data=f"forceclose {videoid}|{user_id}",
-),
+)
 ],
 ]
 return buttons
