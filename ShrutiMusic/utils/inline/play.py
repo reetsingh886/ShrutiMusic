@@ -19,7 +19,7 @@
 # Contact for permissions:
 # Email: badboy809075@gmail.com
 
- import math
+import math
 from pyrogram.types import InlineKeyboardButton
 from ShrutiMusic.utils.formatters import time_to_seconds
 from config import BOT_USERNAME, SUPPORT_GROUP, SUPPORT_CHANNEL
@@ -138,8 +138,7 @@ def stream_markup_timer(_, chat_id, played, dur):
                 callback_data=f"forceclose {chat_id}"
             )
         ],
-    ]           
-
+    ]
 # ©️ Copyright Reserved - @NoxxOP  Nand Yaduwanshi
 
 # ===========================================
