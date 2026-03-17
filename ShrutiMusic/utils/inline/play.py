@@ -19,14 +19,14 @@
 # Contact for permissions:
 # Email: badboy809075@gmail.com
 
-import math
+ import math
 from pyrogram.types import InlineKeyboardButton
 from ShrutiMusic.utils.formatters import time_to_seconds
 from config import BOT_USERNAME, SUPPORT_GROUP, SUPPORT_CHANNEL
 
 
 def track_markup(_, videoid, user_id, channel, fplay):
-    buttons = [
+    return [
         [
             InlineKeyboardButton(
                 text=_["P_B_1"],
@@ -44,12 +44,10 @@ def track_markup(_, videoid, user_id, channel, fplay):
             )
         ],
     ]
-    return buttons
 
 
-# 🔥 IMPORTANT (Import error fix)
 def stream_markup(_, videoid, user_id, channel, fplay):
-    buttons = [
+    return [
         [
             InlineKeyboardButton(
                 text=_["P_B_1"],
@@ -67,7 +65,23 @@ def stream_markup(_, videoid, user_id, channel, fplay):
             ),
         ],
     ]
-    return buttons
+
+
+def livestream_markup(_, videoid, user_id, mode, channel, fplay):
+    return [
+        [
+            InlineKeyboardButton(
+                text=_["P_B_3"],
+                callback_data=f"LiveStream {videoid}|{user_id}|{mode}|{channel}|{fplay}",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text=_["CLOSE_BUTTON"],
+                callback_data=f"forceclose {videoid}|{user_id}",
+            ),
+        ],
+    ]
 
 
 def stream_markup_timer(_, chat_id, played, dur):
@@ -75,11 +89,7 @@ def stream_markup_timer(_, chat_id, played, dur):
         played_sec = time_to_seconds(played)
         duration_sec = time_to_seconds(dur)
 
-        if duration_sec == 0:
-            percentage = 0
-        else:
-            percentage = (played_sec / duration_sec) * 100
-
+        percentage = (played_sec / duration_sec) * 100 if duration_sec != 0 else 0
         umm = int(percentage)
 
         if 0 < umm <= 10:
@@ -108,7 +118,7 @@ def stream_markup_timer(_, chat_id, played, dur):
         played = "0:00"
         dur = "0:00"
 
-    buttons = [
+    return [
         [
             InlineKeyboardButton(
                 text=f"{played} {bar} {dur}",
@@ -128,12 +138,7 @@ def stream_markup_timer(_, chat_id, played, dur):
                 callback_data=f"forceclose {chat_id}"
             )
         ],
-    ]
-    return buttons
-    
-
-            
-
+    ]           
 
 # ©️ Copyright Reserved - @NoxxOP  Nand Yaduwanshi
 
