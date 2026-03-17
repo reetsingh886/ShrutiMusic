@@ -1,35 +1,29 @@
 import math
-from pyrogram.types import InlineKeyboardButton
+from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from ShrutiMusic.utils.formatters import time_to_seconds
 from config import BOT_USERNAME
 
 
-# ================= BASIC ================= #
+def build(buttons):
+    return InlineKeyboardMarkup(buttons)
+
 
 def track_markup(*args):
     try:
         _, videoid, user_id, channel, fplay = args[:5]
     except:
-        return []
+        return None
 
-    return [
+    buttons = [
         [
-            InlineKeyboardButton(
-                text="▶ Audio",
-                callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}",
-            ),
-            InlineKeyboardButton(
-                text="🎥 Video",
-                callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}",
-            ),
+            InlineKeyboardButton("▶ Audio", callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}"),
+            InlineKeyboardButton("🎥 Video", callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}"),
         ],
         [
-            InlineKeyboardButton(
-                text="✖ Close",
-                callback_data=f"forceclose {videoid}|{user_id}",
-            )
+            InlineKeyboardButton("✖ Close", callback_data=f"forceclose {videoid}|{user_id}")
         ],
     ]
+    return build(buttons)
 
 
 def stream_markup(*args):
@@ -44,63 +38,40 @@ def livestream_markup(*args):
     try:
         _, videoid, user_id, mode, channel, fplay = args[:6]
     except:
-        return []
+        return None
 
-    return [
+    buttons = [
         [
-            InlineKeyboardButton(
-                text="🔴 Live Stream",
-                callback_data=f"LiveStream {videoid}|{user_id}|{mode}|{channel}|{fplay}",
-            ),
+            InlineKeyboardButton("🔴 Live Stream", callback_data=f"LiveStream {videoid}|{user_id}|{mode}|{channel}|{fplay}")
         ],
         [
-            InlineKeyboardButton(
-                text="✖ Close",
-                callback_data=f"forceclose {videoid}|{user_id}",
-            ),
+            InlineKeyboardButton("✖ Close", callback_data=f"forceclose {videoid}|{user_id}")
         ],
     ]
+    return build(buttons)
 
-
-# ================= SLIDER ================= #
 
 def slider_markup(*args):
     try:
         _, videoid, user_id, query, query_type, channel, fplay = args[:7]
     except:
-        return []
+        return None
 
     query = str(query)[:20]
 
-    return [
+    buttons = [
         [
-            InlineKeyboardButton(
-                text="▶ Audio",
-                callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}",
-            ),
-            InlineKeyboardButton(
-                text="🎥 Video",
-                callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}",
-            ),
+            InlineKeyboardButton("▶ Audio", callback_data=f"MusicStream {videoid}|{user_id}|a|{channel}|{fplay}"),
+            InlineKeyboardButton("🎥 Video", callback_data=f"MusicStream {videoid}|{user_id}|v|{channel}|{fplay}"),
         ],
         [
-            InlineKeyboardButton(
-                text="◁",
-                callback_data=f"slider B|{query_type}|{query}|{user_id}|{channel}|{fplay}",
-            ),
-            InlineKeyboardButton(
-                text="✖ Close",
-                callback_data=f"forceclose {query}|{user_id}",
-            ),
-            InlineKeyboardButton(
-                text="▷",
-                callback_data=f"slider F|{query_type}|{query}|{user_id}|{channel}|{fplay}",
-            ),
+            InlineKeyboardButton("◁", callback_data=f"slider B|{query_type}|{query}|{user_id}|{channel}|{fplay}"),
+            InlineKeyboardButton("✖ Close", callback_data=f"forceclose {query}|{user_id}"),
+            InlineKeyboardButton("▷", callback_data=f"slider F|{query_type}|{query}|{user_id}|{channel}|{fplay}"),
         ],
     ]
+    return build(buttons)
 
-
-# ================= TIMER ================= #
 
 def stream_markup_timer(_, chat_id, played, dur):
     try:
@@ -136,7 +107,7 @@ def stream_markup_timer(_, chat_id, played, dur):
         played = "0:00"
         dur = "0:00"
 
-    return [
+    buttons = [
         [
             InlineKeyboardButton(
                 text=f"{played} {bar} {dur}",
@@ -144,16 +115,14 @@ def stream_markup_timer(_, chat_id, played, dur):
             )
         ],
         [
-            InlineKeyboardButton(text="▶", callback_data=f"ADMIN Resume|{chat_id}"),
-            InlineKeyboardButton(text="⏸", callback_data=f"ADMIN Pause|{chat_id}"),
-            InlineKeyboardButton(text="⏮", callback_data=f"ADMIN Replay|{chat_id}"),
-            InlineKeyboardButton(text="⏭", callback_data=f"ADMIN Skip|{chat_id}"),
-            InlineKeyboardButton(text="⏹", callback_data=f"ADMIN Stop|{chat_id}"),
+            InlineKeyboardButton("▶", callback_data=f"ADMIN Resume|{chat_id}"),
+            InlineKeyboardButton("⏸", callback_data=f"ADMIN Pause|{chat_id}"),
+            InlineKeyboardButton("⏮", callback_data=f"ADMIN Replay|{chat_id}"),
+            InlineKeyboardButton("⏭", callback_data=f"ADMIN Skip|{chat_id}"),
+            InlineKeyboardButton("⏹", callback_data=f"ADMIN Stop|{chat_id}"),
         ],
         [
-            InlineKeyboardButton(
-                text="✖ Close",
-                callback_data=f"forceclose {chat_id}"
-            )
+            InlineKeyboardButton("✖ Close", callback_data=f"forceclose {chat_id}")
         ],
     ]
+    return build(buttons)
