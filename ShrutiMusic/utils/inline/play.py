@@ -19,8 +19,7 @@
 # Contact for permissions:
 # Email: badboy809075@gmail.com
 
-
- import math
+import math
 from pyrogram.types import InlineKeyboardButton
 from ShrutiMusic.utils.formatters import time_to_seconds
 from config import BOT_USERNAME
@@ -174,4 +173,5 @@ callback_data=f"slider F|{query_type}|{query}|{user_id}|{channel}|{fplay}",
 ),
 ],
 ]
-return buttons               
+return buttons
+ 
