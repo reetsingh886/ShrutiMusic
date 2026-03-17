@@ -6,16 +6,16 @@ import aiohttp
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from py_yt import VideosSearch
 from config import YOUTUBE_IMG_URL
-from ThakurxMusic import app
+from ShrutiMusic import app
 
 CACHE_DIR = "cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 DUAL_TONES = [
-    ((20, 20, 20), (240, 240, 240)),
-    ((25, 30, 45), (250, 250, 250)),
-    ((15, 40, 65), (230, 230, 230)),
-    ((55, 10, 80), (255, 245, 255))
+((20, 20, 20), (240, 240, 240)),
+((25, 30, 45), (250, 250, 250)),
+((15, 40, 65), (230, 230, 230)),
+((55, 10, 80), (255, 245, 255))
 ]
 
 def trim_to_width(text: str, font: ImageFont.FreeTypeFont, max_w: int) -> str:
@@ -30,7 +30,6 @@ def trim_to_width(text: str, font: ImageFont.FreeTypeFont, max_w: int) -> str:
         return text[:max_w//10] + "…" if len(text) > max_w//10 else text
     return ellipsis
 
-
 async def get_thumb(videoid: str, player_username: str = None) -> str:
     if player_username is None:
         player_username = app.username
@@ -38,7 +37,6 @@ async def get_thumb(videoid: str, player_username: str = None) -> str:
     cache_path = os.path.join(CACHE_DIR, f"{videoid}_hexagon.png")
     if os.path.exists(cache_path):
         return cache_path
-
 
     try:
         results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
@@ -64,7 +62,6 @@ async def get_thumb(videoid: str, player_username: str = None) -> str:
     except:
         return YOUTUBE_IMG_URL
 
-    
     bg = Image.open(thumb_path).resize((1280, 720)).convert("RGB")
     bg = bg.filter(ImageFilter.GaussianBlur(30)).convert("RGBA")
     overlay = Image.new("RGBA", (1280, 720), (255, 255, 255, 40))
@@ -95,9 +92,7 @@ async def get_thumb(videoid: str, player_username: str = None) -> str:
     border_hex = [(x + offset, y + offset) for x, y in hex_points]
 
     d.polygon(border_hex, outline=(90, 0, 60, 255), width=26)
-
     d.polygon(border_hex, outline=(255, 100, 200, 180), width=10)
-
     d.polygon(border_hex, outline=(255, 40, 150, 255), width=16)
 
     bg.paste(border_img, (60, 60), border_img)
@@ -106,9 +101,9 @@ async def get_thumb(videoid: str, player_username: str = None) -> str:
     draw = ImageDraw.Draw(bg)
 
     try:
-        title_font = ImageFont.truetype("ThakurxMusic/assets/font.ttf", 44)
-        meta_font = ImageFont.truetype("ThakurxMusic/assets/font.ttf", 26)
-        tag_font = ImageFont.truetype("ThakurxMusic/assets/font2.ttf", 28)
+        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)
+        meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 26)
+        tag_font = ImageFont.truetype("ShrutiMusic/assets/font2.ttf", 28)
     except:
         title_font = meta_font = tag_font = ImageFont.load_default()
 
@@ -129,7 +124,7 @@ async def get_thumb(videoid: str, player_username: str = None) -> str:
         spacing=10,
         font=meta_font
     )
-    
+
     bar_y = title_y + 240
     bar_w = 390
 
@@ -156,3 +151,5 @@ async def get_thumb(videoid: str, player_username: str = None) -> str:
 
     bg.save(cache_path)
     return cache_path
+    
+    
