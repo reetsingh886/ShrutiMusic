@@ -28,8 +28,10 @@ from strings import get_string
 @LanguageStart
 async def start_pm(client, message: Message, _):
     await add_served_user(message.from_user.id)
+
     if len(message.text.split()) > 1:
         name = message.text.split(None, 1)[1]
+
         if name[0:4] == "help":
             keyboard = help_pannel_page1(_)
             try:
@@ -38,25 +40,30 @@ async def start_pm(client, message: Message, _):
                     caption=_["help_1"].format(config.SUPPORT_GROUP),
                     reply_markup=keyboard,
                     message_effect_id=5159385139981059251,
+                    has_spoiler=True
                 )
             except:
                 return await message.reply_photo(
                     photo=config.START_IMG_URL,
                     caption=_["help_1"].format(config.SUPPORT_GROUP),
                     reply_markup=keyboard,
+                    has_spoiler=True
                 )
+
         if name[0:3] == "sud":
             await sudoers_list(client=client, message=message, _=_)
             if await is_on_off(2):
                 return await app.send_message(
                     chat_id=config.LOG_GROUP_ID,
-                    text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>sᴜᴅᴏʟɪsᴛ</b>.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> @{message.from_user.username}",
+                    text=f"{message.from_user.mention} started bot to check sudolist.\n\nUser ID: {message.from_user.id}"
                 )
             return
+
         if name[0:3] == "inf":
             m = await message.reply_text("🔎")
             query = (str(name)).replace("info_", "", 1)
             query = f"https://www.youtube.com/watch?v={query}"
+
             results = VideosSearch(query, limit=1)
             for result in (await results.next())["result"]:
                 title = result["title"]
@@ -67,18 +74,20 @@ async def start_pm(client, message: Message, _):
                 channel = result["channel"]["name"]
                 link = result["link"]
                 published = result["publishedTime"]
+
             searched_text = _["start_6"].format(
                 title, duration, views, published, channellink, channel, app.mention
             )
+
             key = InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(text=_["S_B_8"], url=link),
-                        InlineKeyboardButton(text=_["S_B_9"], url=config.SUPPORT_GROUP),
-                    ],
-                ]
+                [[
+                    InlineKeyboardButton(text=_["S_B_8"], url=link),
+                    InlineKeyboardButton(text=_["S_B_9"], url=config.SUPPORT_GROUP),
+                ]]
             )
+
             await m.delete()
+
             try:
                 await app.send_photo(
                     chat_id=message.chat.id,
@@ -86,6 +95,7 @@ async def start_pm(client, message: Message, _):
                     caption=searched_text,
                     reply_markup=key,
                     message_effect_id=5159385139981059251,
+                    has_spoiler=True
                 )
             except:
                 await app.send_photo(
@@ -93,53 +103,47 @@ async def start_pm(client, message: Message, _):
                     photo=thumbnail,
                     caption=searched_text,
                     reply_markup=key,
+                    has_spoiler=True
                 )
-            if await is_on_off(2):
-                return await app.send_message(
-                    chat_id=config.LOG_GROUP_ID,
-                    text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ᴄʜᴇᴄᴋ <b>ᴛʀᴀᴄᴋ ɪɴғᴏʀᴍᴀᴛɪᴏɴ</b>.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> @{message.from_user.username}",
-                )
+
         if name == "start":
             out = private_panel(_)
             UP, CPU, RAM, DISK = await bot_sys_stats()
+
             try:
                 await message.reply_photo(
                     photo=config.START_IMG_URL,
                     caption=_["start_2"].format(message.from_user.mention, app.mention, UP, DISK, CPU, RAM),
                     reply_markup=InlineKeyboardMarkup(out),
                     message_effect_id=5159385139981059251,
+                    has_spoiler=True
                 )
             except:
                 await message.reply_photo(
                     photo=config.START_IMG_URL,
                     caption=_["start_2"].format(message.from_user.mention, app.mention, UP, DISK, CPU, RAM),
                     reply_markup=InlineKeyboardMarkup(out),
+                    has_spoiler=True
                 )
-            if await is_on_off(2):
-                return await app.send_message(
-                    chat_id=config.LOG_GROUP_ID,
-                    text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> @{message.from_user.username}",
-                )
+
     else:
         out = private_panel(_)
         UP, CPU, RAM, DISK = await bot_sys_stats()
+
         try:
             await message.reply_photo(
                 photo=config.START_IMG_URL,
                 caption=_["start_2"].format(message.from_user.mention, app.mention, UP, DISK, CPU, RAM),
                 reply_markup=InlineKeyboardMarkup(out),
                 message_effect_id=5159385139981059251,
+                has_spoiler=True
             )
         except:
             await message.reply_photo(
                 photo=config.START_IMG_URL,
                 caption=_["start_2"].format(message.from_user.mention, app.mention, UP, DISK, CPU, RAM),
                 reply_markup=InlineKeyboardMarkup(out),
-            )
-        if await is_on_off(2):
-            return await app.send_message(
-                chat_id=config.LOG_GROUP_ID,
-                text=f"{message.from_user.mention} ᴊᴜsᴛ sᴛᴀʀᴛᴇᴅ ᴛʜᴇ ʙᴏᴛ.\n\n<b>ᴜsᴇʀ ɪᴅ :</b> <code>{message.from_user.id}</code>\n<b>ᴜsᴇʀɴᴀᴍᴇ :</b> @{message.from_user.username}",
+                has_spoiler=True
             )
 
 
@@ -148,19 +152,23 @@ async def start_pm(client, message: Message, _):
 async def start_gp(client, message: Message, _):
     out = start_panel(_)
     uptime = int(time.time() - _boot_)
+
     try:
         await message.reply_photo(
             photo=config.START_IMG_URL,
             caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
             reply_markup=InlineKeyboardMarkup(out),
             message_effect_id=5159385139981059251,
+            has_spoiler=True
         )
     except:
         await message.reply_photo(
             photo=config.START_IMG_URL,
             caption=_["start_1"].format(app.mention, get_readable_time(uptime)),
             reply_markup=InlineKeyboardMarkup(out),
+            has_spoiler=True
         )
+
     return await add_served_chat(message.chat.id)
 
 
@@ -170,27 +178,16 @@ async def welcome(client, message: Message):
         try:
             language = await get_lang(message.chat.id)
             _ = get_string(language)
+
             if await is_banned_user(member.id):
                 try:
                     await message.chat.ban_member(member.id)
                 except:
                     pass
-            if member.id == app.id:
-                if message.chat.type != ChatType.SUPERGROUP:
-                    await message.reply_text(_["start_4"])
-                    return await app.leave_chat(message.chat.id)
-                if message.chat.id in await blacklisted_chats():
-                    await message.reply_text(
-                        _["start_5"].format(
-                            app.mention,
-                            f"https://t.me/{app.username}?start=sudolist",
-                            config.SUPPORT_GROUP,
-                        ),
-                        disable_web_page_preview=True,
-                    )
-                    return await app.leave_chat(message.chat.id)
 
+            if member.id == app.id:
                 out = start_panel(_)
+
                 try:
                     await message.reply_photo(
                         photo=config.START_IMG_URL,
@@ -202,6 +199,7 @@ async def welcome(client, message: Message):
                         ),
                         reply_markup=InlineKeyboardMarkup(out),
                         message_effect_id=5159385139981059251,
+                        has_spoiler=True
                     )
                 except:
                     await message.reply_photo(
@@ -213,8 +211,11 @@ async def welcome(client, message: Message):
                             app.mention,
                         ),
                         reply_markup=InlineKeyboardMarkup(out),
+                        has_spoiler=True
                     )
+
                 await add_served_chat(message.chat.id)
                 await message.stop_propagation()
+
         except Exception as ex:
             print(ex)
