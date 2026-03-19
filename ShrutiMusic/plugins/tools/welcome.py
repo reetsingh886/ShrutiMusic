@@ -1,6 +1,6 @@
 import os
 from unidecode import unidecode
-from PIL import ImageDraw, Image, ImageFont, ImageFilter
+from PIL import ImageDraw, Image, ImageFont
 from pyrogram import filters, enums
 from pyrogram.types import *
 from logging import getLogger
@@ -31,13 +31,13 @@ def circle(pfp, size=(380, 380)):
     return pfp
 
 
-# Glow Text Function 🔥
-def draw_glow_text(draw, position, text, font, text_color, glow_color):
-    x, y = position
-    for i in range(1, 6):
-        draw.text((x-i, y-i), text, font=font, fill=glow_color)
-        draw.text((x+i, y+i), text, font=font, fill=glow_color)
-    draw.text(position, text, font=font, fill=text_color)
+# Glow Text
+def draw_glow_text(draw, pos, text, font):
+    x, y = pos
+    for i in range(1, 5):
+        draw.text((x-i, y-i), text, font=font, fill="white")
+        draw.text((x+i, y+i), text, font=font, fill="white")
+    draw.text(pos, text, font=font, fill="#ff6fa5")
 
 
 # Create Image
@@ -53,19 +53,18 @@ def welcomepic(pic, user, chat, id, uname):
 
     draw = ImageDraw.Draw(bg)
 
-    # Fonts
     font_big = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 85)
     font_small = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 45)
 
     uname = f"@{uname}" if uname else "Not Set"
 
-    # 💖 Glow Text
-    draw_glow_text(draw, (120, 200), "WELCOME", font_big, "#ff6fa5", "white")
-    draw_glow_text(draw, (120, 320), f"Name: {unidecode(user)}", font_small, "#ff6fa5", "white")
-    draw_glow_text(draw, (120, 390), f"ID: {id}", font_small, "#ff6fa5", "white")
-    draw_glow_text(draw, (120, 460), f"Username: {uname}", font_small, "#ff6fa5", "white")
+    # TEXT
+    draw_glow_text(draw, (120, 200), "WELCOME", font_big)
+    draw_glow_text(draw, (120, 320), f"Name: {unidecode(user)}", font_small)
+    draw_glow_text(draw, (120, 390), f"ID: {id}", font_small)
+    draw_glow_text(draw, (120, 460), f"Username: {uname}", font_small)
 
-    # 🔵 DP Position (perfect fit)
+    # DP POSITION
     bg.paste(pfp, (880, 170), pfp)
 
     path = f"downloads/welcome_{id}.png"
@@ -74,7 +73,7 @@ def welcomepic(pic, user, chat, id, uname):
     return path
 
 
-# Command
+# COMMAND
 @app.on_message(filters.command("welcome") & ~filters.private)
 async def auto_state(_, message: Message):
     if len(message.command) < 2:
@@ -97,8 +96,8 @@ async def auto_state(_, message: Message):
         await message.reply_text("❌ Welcome Disabled")
 
 
-# Welcome Handler
-@app.on_chat_member_updated(filters.group)
+# 🔥 MAIN WELCOME HANDLER (FIXED)
+@app.on_chat_member_updated(filters.group, group=5)
 async def greet_group(_, member: ChatMemberUpdated):
     chat_id = member.chat.id
 
@@ -106,45 +105,51 @@ async def greet_group(_, member: ChatMemberUpdated):
     if data and data.get("disabled", False):
         return
 
-    if member.new_chat_member and member.new_chat_member.status == "member":
-        user = member.new_chat_member.user
+    # ✅ ALL JOIN TYPES HANDLE
+    if not member.new_chat_member:
+        return
 
+    user = member.new_chat_member.user
+    if not user or user.is_bot:
+        return
+
+    # Download DP
+    try:
+        pic = await app.download_media(
+            user.photo.big_file_id,
+            file_name=f"downloads/pp{user.id}.png"
+        )
+    except:
+        pic = "ShrutiMusic/assets/upic.png"
+
+    # Remove old welcome
+    if temp.MELCOW.get(chat_id):
         try:
-            pic = await app.download_media(
-                user.photo.big_file_id,
-                file_name=f"downloads/pp{user.id}.png"
-            )
+            await temp.MELCOW[chat_id].delete()
         except:
-            pic = "ShrutiMusic/assets/upic.png"
+            pass
 
-        # Remove old
-        if temp.MELCOW.get(chat_id):
-            try:
-                await temp.MELCOW[chat_id].delete()
-            except:
-                pass
+    try:
+        img = welcomepic(pic, user.first_name, member.chat.title, user.id, user.username)
 
-        try:
-            img = welcomepic(pic, user.first_name, member.chat.title, user.id, user.username)
-
-            temp.MELCOW[chat_id] = await app.send_photo(
-                chat_id,
-                photo=img,
-                caption=f"""✨ Welcome {user.mention} ❤️
+        temp.MELCOW[chat_id] = await app.send_photo(
+            chat_id,
+            photo=img,
+            caption=f"""✨ Welcome {user.mention} ❤️
 
 📌 Group: {member.chat.title}
 🆔 ID: {user.id}
 👤 Username: @{user.username if user.username else "Not Set"}""",
-            )
+        )
 
-        except Exception as e:
-            LOGGER.error(e)
+    except Exception as e:
+        LOGGER.error(e)
 
-        # Cleanup
-        try:
-            if os.path.exists(img):
-                os.remove(img)
-            if os.path.exists(f"downloads/pp{user.id}.png"):
-                os.remove(f"downloads/pp{user.id}.png")
-        except:
-            pass
+    # Cleanup
+    try:
+        if os.path.exists(img):
+            os.remove(img)
+        if os.path.exists(f"downloads/pp{user.id}.png"):
+            os.remove(f"downloads/pp{user.id}.png")
+    except:
+        pass
