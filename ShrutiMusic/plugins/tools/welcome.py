@@ -21,7 +21,7 @@ class temp:
     MELCOW = {}
 
 
-# Circle DP
+# 🔵 Circle DP
 def circle(pfp, size=(380, 380)):
     pfp = pfp.resize(size).convert("RGBA")
     mask = Image.new("L", size, 0)
@@ -31,16 +31,7 @@ def circle(pfp, size=(380, 380)):
     return pfp
 
 
-# Glow Text
-def draw_glow_text(draw, pos, text, font):
-    x, y = pos
-    for i in range(1, 5):
-        draw.text((x-i, y-i), text, font=font, fill="white")
-        draw.text((x+i, y+i), text, font=font, fill="white")
-    draw.text(pos, text, font=font, fill="#ff6fa5")
-
-
-# Create Image
+# 💖 Welcome Image (Pink Style)
 def welcomepic(pic, user, chat, id, uname):
     bg = Image.open("ShrutiMusic/assets/welcome.png").convert("RGBA")
 
@@ -53,18 +44,18 @@ def welcomepic(pic, user, chat, id, uname):
 
     draw = ImageDraw.Draw(bg)
 
-    font_big = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 85)
+    font_big = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 80)
     font_small = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 45)
 
     uname = f"@{uname}" if uname else "Not Set"
 
-    # TEXT
-    draw_glow_text(draw, (120, 200), "WELCOME", font_big)
-    draw_glow_text(draw, (120, 320), f"Name: {unidecode(user)}", font_small)
-    draw_glow_text(draw, (120, 390), f"ID: {id}", font_small)
-    draw_glow_text(draw, (120, 460), f"Username: {uname}", font_small)
+    # 💕 TEXT (pink theme match)
+    draw.text((120, 220), "WELCOME", fill="#ff6fa5", font=font_big)
+    draw.text((120, 330), f"Name: {unidecode(user)}", fill="#ff6fa5", font=font_small)
+    draw.text((120, 400), f"ID: {id}", fill="#ff6fa5", font=font_small)
+    draw.text((120, 470), f"Username: {uname}", fill="#ff6fa5", font=font_small)
 
-    # DP POSITION
+    # 🔵 DP position (perfect circle)
     bg.paste(pfp, (880, 170), pfp)
 
     path = f"downloads/welcome_{id}.png"
@@ -73,7 +64,7 @@ def welcomepic(pic, user, chat, id, uname):
     return path
 
 
-# COMMAND
+# 🔧 Command
 @app.on_message(filters.command("welcome") & ~filters.private)
 async def auto_state(_, message: Message):
     if len(message.command) < 2:
@@ -96,7 +87,7 @@ async def auto_state(_, message: Message):
         await message.reply_text("❌ Welcome Disabled")
 
 
-# 🔥 MAIN WELCOME HANDLER (FIXED)
+# 🔥 ALL JOIN TYPES HANDLER
 @app.on_chat_member_updated(filters.group, group=5)
 async def greet_group(_, member: ChatMemberUpdated):
     chat_id = member.chat.id
@@ -105,7 +96,6 @@ async def greet_group(_, member: ChatMemberUpdated):
     if data and data.get("disabled", False):
         return
 
-    # ✅ ALL JOIN TYPES HANDLE
     if not member.new_chat_member:
         return
 
@@ -113,7 +103,7 @@ async def greet_group(_, member: ChatMemberUpdated):
     if not user or user.is_bot:
         return
 
-    # Download DP
+    # DP download
     try:
         pic = await app.download_media(
             user.photo.big_file_id,
