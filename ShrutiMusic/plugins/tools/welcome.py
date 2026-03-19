@@ -1,6 +1,6 @@
 import os
 from unidecode import unidecode
-from PIL import ImageDraw, Image, ImageFont, ImageChops
+from PIL import ImageDraw, Image, ImageFont, ImageFilter
 from pyrogram import filters, enums
 from pyrogram.types import *
 from logging import getLogger
@@ -10,31 +10,39 @@ from ShrutiMusic.utils.database import db
 
 LOGGER = getLogger(__name__)
 
-# Welcome DB
+# DB
 try:
     wlcm = db.welcome
 except:
     from ShrutiMusic.utils.database import welcome as wlcm
 
 
-# Temp Storage
 class temp:
     MELCOW = {}
 
 
-# Circle SP
-def circle(pfp, size=(450, 450)):
-    pfp = pfp.resize(size, Image.LANCZOS).convert("RGBA")
-    mask = Image.new("L", pfp.size, 0)
+# Circle DP
+def circle(pfp, size=(380, 380)):
+    pfp = pfp.resize(size).convert("RGBA")
+    mask = Image.new("L", size, 0)
     draw = ImageDraw.Draw(mask)
-    draw.ellipse((0, 0) + pfp.size, fill=255)
+    draw.ellipse((0, 0) + size, fill=255)
     pfp.putalpha(mask)
     return pfp
 
 
-# Create Welcome Image
+# Glow Text Function 🔥
+def draw_glow_text(draw, position, text, font, text_color, glow_color):
+    x, y = position
+    for i in range(1, 6):
+        draw.text((x-i, y-i), text, font=font, fill=glow_color)
+        draw.text((x+i, y+i), text, font=font, fill=glow_color)
+    draw.text(position, text, font=font, fill=text_color)
+
+
+# Create Image
 def welcomepic(pic, user, chat, id, uname):
-    background = Image.open("ShrutiMusic/assets/welcome.png").convert("RGBA")
+    bg = Image.open("ShrutiMusic/assets/welcome.png").convert("RGBA")
 
     try:
         pfp = Image.open(pic).convert("RGBA")
@@ -43,28 +51,30 @@ def welcomepic(pic, user, chat, id, uname):
 
     pfp = circle(pfp)
 
-    draw = ImageDraw.Draw(background)
+    draw = ImageDraw.Draw(bg)
 
-    font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 45)
-    font2 = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 90)
+    # Fonts
+    font_big = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 85)
+    font_small = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 45)
 
-    # Safe username
     uname = f"@{uname}" if uname else "Not Set"
 
-    draw.text((65, 250), f"NAME : {unidecode(user)}", fill="white", font=font)
-    draw.text((65, 340), f"ID : {id}", fill="white", font=font)
-    draw.text((65, 430), f"USERNAME : {uname}", fill="white", font=font)
+    # 💖 Glow Text
+    draw_glow_text(draw, (120, 200), "WELCOME", font_big, "#ff6fa5", "white")
+    draw_glow_text(draw, (120, 320), f"Name: {unidecode(user)}", font_small, "#ff6fa5", "white")
+    draw_glow_text(draw, (120, 390), f"ID: {id}", font_small, "#ff6fa5", "white")
+    draw_glow_text(draw, (120, 460), f"Username: {uname}", font_small, "#ff6fa5", "white")
 
-    # DP Position
-    background.paste(pfp, (767, 133), pfp)
+    # 🔵 DP Position (perfect fit)
+    bg.paste(pfp, (880, 170), pfp)
 
     path = f"downloads/welcome_{id}.png"
-    background.save(path)
+    bg.save(path)
 
     return path
 
 
-# Command ON/OFF
+# Command
 @app.on_message(filters.command("welcome") & ~filters.private)
 async def auto_state(_, message: Message):
     if len(message.command) < 2:
@@ -87,7 +97,7 @@ async def auto_state(_, message: Message):
         await message.reply_text("❌ Welcome Disabled")
 
 
-# Main Welcome Handler
+# Welcome Handler
 @app.on_chat_member_updated(filters.group)
 async def greet_group(_, member: ChatMemberUpdated):
     chat_id = member.chat.id
@@ -99,13 +109,15 @@ async def greet_group(_, member: ChatMemberUpdated):
     if member.new_chat_member and member.new_chat_member.status == "member":
         user = member.new_chat_member.user
 
-        # Download DP
         try:
-            pic = await app.download_media(user.photo.big_file_id, file_name=f"downloads/pp{user.id}.png")
+            pic = await app.download_media(
+                user.photo.big_file_id,
+                file_name=f"downloads/pp{user.id}.png"
+            )
         except:
             pic = "ShrutiMusic/assets/upic.png"
 
-        # Remove old welcome
+        # Remove old
         if temp.MELCOW.get(chat_id):
             try:
                 await temp.MELCOW[chat_id].delete()
