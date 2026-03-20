@@ -1,9 +1,8 @@
 import os
 import re
-import random
 import aiofiles
 import aiohttp
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from py_yt import VideosSearch
 from config import YOUTUBE_IMG_URL
 from ShrutiMusic import app
@@ -11,14 +10,8 @@ from ShrutiMusic import app
 CACHE_DIR = "cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-DUAL_TONES = [
-((20, 20, 20), (240, 240, 240)),
-((25, 30, 45), (250, 250, 250)),
-((15, 40, 65), (230, 230, 230)),
-((55, 10, 80), (255, 245, 255))
-]
 
-def trim_to_width(text: str, font: ImageFont.FreeTypeFont, max_w: int) -> str:
+def trim_to_width(text: str, font, max_w: int) -> str:
     ellipsis = "…"
     try:
         if font.getlength(text) <= max_w:
@@ -27,7 +20,7 @@ def trim_to_width(text: str, font: ImageFont.FreeTypeFont, max_w: int) -> str:
             if font.getlength(text[:i] + ellipsis) <= max_w:
                 return text[:i] + ellipsis
     except:
-        return text[:max_w//10] + "…" if len(text) > max_w//10 else text
+        return text[:max_w//10] + "…"
     return ellipsis
 
 
@@ -35,7 +28,7 @@ async def gen_thumb(videoid: str, player_username: str = None) -> str:
     if player_username is None:
         player_username = app.username
 
-    cache_path = os.path.join(CACHE_DIR, f"{videoid}_hexagon.png")
+    cache_path = os.path.join(CACHE_DIR, f"{videoid}_red.png")
     if os.path.exists(cache_path):
         return cache_path
 
@@ -43,17 +36,17 @@ async def gen_thumb(videoid: str, player_username: str = None) -> str:
         results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
         search = await results.next()
         data = search.get("result", [])[0]
-        title = re.sub(r"\W+", " ", data.get("title", "Unknown Title")).title()
+        title = re.sub(r"\W+", " ", data.get("title", "Unknown")).title()
         thumbnail = data.get("thumbnails", [{}])[0].get("url", YOUTUBE_IMG_URL)
         duration = data.get("duration")
-        views = data.get("viewCount", {}).get("short", "Unknown Views")
+        views = data.get("viewCount", {}).get("short", "Unknown")
     except:
         title, thumbnail, duration, views = "Unknown", YOUTUBE_IMG_URL, None, "Unknown"
 
-    is_live = not duration or str(duration).lower() in {"live", "live now", ""}
-    duration_text = "Live" if is_live else duration or "Unknown"
+    duration_text = duration if duration else "Live"
 
     thumb_path = os.path.join(CACHE_DIR, f"thumb_{videoid}.png")
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(thumbnail) as r:
@@ -63,87 +56,79 @@ async def gen_thumb(videoid: str, player_username: str = None) -> str:
     except:
         return YOUTUBE_IMG_URL
 
-    bg = Image.open(thumb_path).resize((1280, 720)).convert("RGB")
-    bg = bg.filter(ImageFilter.GaussianBlur(30)).convert("RGBA")
-    overlay = Image.new("RGBA", (1280, 720), (255, 255, 255, 40))
+    # 🔥 Background
+    bg = Image.open(thumb_path).resize((1280, 720)).convert("RGBA")
+    bg = bg.filter(ImageFilter.GaussianBlur(25))
+
+    # Dark + Red overlay
+    overlay = Image.new("RGBA", (1280, 720), (0, 0, 0, 160))
+    red_overlay = Image.new("RGBA", (1280, 720), (255, 0, 0, 60))
     bg = Image.alpha_composite(bg, overlay)
+    bg = Image.alpha_composite(bg, red_overlay)
 
-    thumb = Image.open(thumb_path).resize((520, 520)).convert("RGBA")
+    # 🎯 Thumbnail image (square instead of hexagon)
+    thumb = Image.open(thumb_path).resize((420, 420)).convert("RGBA")
 
-    hex_points = [
-        (260, 0),
-        (520, 130),
-        (520, 390),
-        (260, 520),
-        (0, 390),
-        (0, 130)
-    ]
-
-    mask = Image.new("L", (520, 520), 0)
+    mask = Image.new("L", (420, 420), 0)
     draw_mask = ImageDraw.Draw(mask)
-    draw_mask.polygon(hex_points, fill=255)
+    draw_mask.rounded_rectangle((0, 0, 420, 420), 40, fill=255)
 
-    hex_thumb = Image.new("RGBA", (520, 520), (0, 0, 0, 0))
-    hex_thumb.paste(thumb, (0, 0), mask)
+    thumb.putalpha(mask)
 
-    border_img = Image.new("RGBA", (600, 600), (0, 0, 0, 0))
-    d = ImageDraw.Draw(border_img)
-    offset = 40
+    # 🔴 Red glow border
+    border = Image.new("RGBA", (440, 440), (0, 0, 0, 0))
+    d = ImageDraw.Draw(border)
+    d.rounded_rectangle((0, 0, 440, 440), 50, outline=(255, 0, 0, 255), width=6)
 
-    border_hex = [(x + offset, y + offset) for x, y in hex_points]
-
-    d.polygon(border_hex, outline=(90, 0, 60, 255), width=26)
-    d.polygon(border_hex, outline=(255, 100, 200, 180), width=10)
-    d.polygon(border_hex, outline=(255, 40, 150, 255), width=16)
-
-    bg.paste(border_img, (60, 60), border_img)
-    bg.paste(hex_thumb, (100, 100), hex_thumb)
+    bg.paste(border, (80, 140), border)
+    bg.paste(thumb, (90, 150), thumb)
 
     draw = ImageDraw.Draw(bg)
 
+    # Fonts
     try:
-        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)
-        meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 26)
-        tag_font = ImageFont.truetype("ShrutiMusic/assets/font2.ttf", 28)
+        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 46)
+        meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 28)
+        tag_font = ImageFont.truetype("ShrutiMusic/assets/font2.ttf", 26)
     except:
         title_font = meta_font = tag_font = ImageFont.load_default()
 
-    title_x = 700
-    title_y = 180
-    title_text = trim_to_width(title, title_font, 480)
-    draw.text((title_x, title_y), title_text, fill=(0, 0, 0), font=title_font)
+    # 🔴 NOW PLAYING Tag
+    tag_x, tag_y = 600, 120
+    draw.rounded_rectangle((tag_x, tag_y, tag_x+220, tag_y+50), 25, fill=(255, 0, 0))
+    draw.text((tag_x+25, tag_y+10), "NOW PLAYING", fill="white", font=tag_font)
 
-    meta = (
-        f"YouTube | {views}\n"
-        f"Duration | {duration_text}\n"
-        f"Player | @{player_username}\n"
-    )
-    draw.multiline_text(
-        (title_x, title_y + 90),
-        meta,
-        fill=(0, 0, 0),
-        spacing=10,
-        font=meta_font
-    )
+    # 🎵 Title
+    title_text = trim_to_width(title, title_font, 550)
+    draw.text((600, 200), title_text, fill="white", font=title_font)
 
-    bar_y = title_y + 240
-    bar_w = 390
+    # underline
+    draw.line((600, 260, 1000, 260), fill=(255, 0, 0), width=3)
 
-    draw.rounded_rectangle(
-        (title_x, bar_y, title_x + bar_w, bar_y + 14),
-        8,
-        fill=(255, 255, 255, 80)
-    )
+    # 📊 Meta
+    draw.text((600, 290), f"Duration: ", fill="white", font=meta_font)
+    draw.text((760, 290), duration_text, fill="red", font=meta_font)
 
-    draw.rounded_rectangle(
-        (title_x, bar_y, title_x + bar_w // 2, bar_y + 14),
-        8,
-        fill=(0, 0, 0)
-    )
+    draw.text((600, 330), f"Views: ", fill="white", font=meta_font)
+    draw.text((720, 330), views, fill="red", font=meta_font)
 
+    draw.text((600, 370), f"Player: ", fill="white", font=meta_font)
+    draw.text((720, 370), f"@{player_username}", fill="red", font=meta_font)
+
+    # 🔥 Progress Bar
+    bar_x, bar_y = 600, 450
+    bar_w = 500
+
+    draw.rounded_rectangle((bar_x, bar_y, bar_x+bar_w, bar_y+12), 6, fill=(200, 200, 200))
+    draw.rounded_rectangle((bar_x, bar_y, bar_x+bar_w//2, bar_y+12), 6, fill=(255, 0, 0))
+
+    # Circle indicator
+    draw.ellipse((bar_x+bar_w//2-6, bar_y-4, bar_x+bar_w//2+6, bar_y+16), fill="white")
+
+    # ⚡ Branding
     brand = "Powered by Mr Thakur"
     w = tag_font.getlength(brand)
-    draw.text((1280 - w - 50, 680), brand, fill=(0, 0, 0), font=tag_font)
+    draw.text((1280 - w - 40, 680), brand, fill="white", font=tag_font)
 
     try:
         os.remove(thumb_path)
