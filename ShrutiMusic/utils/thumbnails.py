@@ -10,10 +10,14 @@ CACHE_DIR = "cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 
+# ✅ SAFE TEXT TRIM (NO ERROR)
 def trim(text, font, max_w):
-    while font.getlength(text) > max_w:
-        text = text[:-1]
-    return text + "..."
+    try:
+        while font.getbbox(text)[2] > max_w:
+            text = text[:-1]
+        return text + "..."
+    except:
+        return text
 
 
 async def gen_thumb(videoid: str, player_username=None):
@@ -24,23 +28,33 @@ async def gen_thumb(videoid: str, player_username=None):
     if os.path.exists(path):
         return path
 
+    # ✅ SAFE DATA FETCH
     try:
         results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
         data = (await results.next())["result"][0]
 
-        title = data["title"]
-        thumb_url = data["thumbnails"][0]["url"]
+        title = data.get("title", "Unknown")
+        thumb_url = data.get("thumbnails", [{}])[0].get("url", YOUTUBE_IMG_URL)
         duration = data.get("duration", "Live")
-        views = data["viewCount"]["short"]
-    except:
+        views = data.get("viewCount", {}).get("short", "0")
+
+    except Exception as e:
+        print("YT ERROR:", e)
         title, thumb_url, duration, views = "Unknown", YOUTUBE_IMG_URL, "Live", "0"
 
     thumb_path = f"{CACHE_DIR}/{videoid}.png"
 
-    async with aiohttp.ClientSession() as s:
-        async with s.get(thumb_url) as r:
-            async with aiofiles.open(thumb_path, "wb") as f:
-                await f.write(await r.read())
+    # ✅ DOWNLOAD THUMB SAFE
+    try:
+        async with aiohttp.ClientSession() as s:
+            async with s.get(thumb_url) as r:
+                if r.status == 200:
+                    async with aiofiles.open(thumb_path, "wb") as f:
+                        await f.write(await r.read())
+                else:
+                    raise Exception("Thumbnail not found")
+    except:
+        thumb_path = None
 
     # 🖤 BLACK BASE
     bg = Image.new("RGB", (1280, 720), (0, 0, 0))
@@ -54,9 +68,13 @@ async def gen_thumb(videoid: str, player_username=None):
 
     draw = ImageDraw.Draw(bg)
 
-    # 🖼 THUMB
-    thumb = Image.open(thumb_path).resize((420, 420)).convert("RGBA")
+    # 🖼 THUMB SAFE LOAD
+    try:
+        thumb = Image.open(thumb_path).resize((420, 420)).convert("RGBA")
+    except:
+        thumb = Image.new("RGBA", (420, 420), (30, 30, 30, 255))
 
+    # rounded mask
     mask = Image.new("L", (420, 420), 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, 420, 420), 40, fill=255)
     thumb.putalpha(mask)
@@ -72,7 +90,7 @@ async def gen_thumb(videoid: str, player_username=None):
     bg.paste(border, (100, 130), border)
     bg.paste(thumb, (120, 150), thumb)
 
-    # 🅵🅾🅽🆃🆂
+    # 🅵🅾🅽🆃🆂 SAFE
     try:
         title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)
         meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 30)
@@ -102,14 +120,13 @@ async def gen_thumb(videoid: str, player_username=None):
 
     draw.rounded_rectangle((bar_x, bar_y, bar_x+bar_w, bar_y+10), 6, fill=(70,70,70))
     draw.rounded_rectangle((bar_x, bar_y, bar_x+bar_w//2, bar_y+10), 6, fill=(255,120,40))
-
     draw.ellipse((bar_x+bar_w//2-8, bar_y-5, bar_x+bar_w//2+8, bar_y+15), fill="white")
 
     # time
     draw.text((600, 510), "00:00", fill="white", font=small_font)
     draw.text((1080, 510), duration, fill="white", font=small_font)
 
-    # 🔥 REFLECTION EFFECT
+    # 🔥 REFLECTION
     reflection = bg.crop((0, 350, 1280, 720)).transpose(Image.FLIP_TOP_BOTTOM)
     reflection = reflection.filter(ImageFilter.GaussianBlur(15))
     bg.paste(reflection, (0, 520), reflection)
@@ -117,8 +134,10 @@ async def gen_thumb(videoid: str, player_username=None):
     # 🔥 BRANDING
     draw.text((820, 660), "Powered by Mr Thakur", fill=(255, 120, 40), font=small_font)
 
+    # cleanup
     try:
-        os.remove(thumb_path)
+        if thumb_path and os.path.exists(thumb_path):
+            os.remove(thumb_path)
     except:
         pass
 
