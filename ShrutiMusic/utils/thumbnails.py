@@ -23,17 +23,17 @@ async def gen_thumb(videoid: str, player_username=None):
     if player_username is None:
         player_username = getattr(app, "username", "MusicBot")
 
-    path = f"{CACHE_DIR}/{videoid}_ultra.png"
+    path = f"{CACHE_DIR}/{videoid}_final.png"
     if os.path.exists(path):
         return path
 
-    # 🔍 FETCH DATA
+    # 🔍 YT FETCH
     try:
         results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
         res = await results.next()
 
         if not res.get("result"):
-            raise ValueError("No result")
+            raise ValueError
 
         data = res["result"][0]
 
@@ -47,7 +47,7 @@ async def gen_thumb(videoid: str, player_username=None):
 
     thumb_path = f"{CACHE_DIR}/{videoid}.png"
 
-    # ⬇ DOWNLOAD THUMB
+    # ⬇ DOWNLOAD
     try:
         async with aiohttp.ClientSession() as s:
             async with s.get(thumb_url) as r:
@@ -59,22 +59,15 @@ async def gen_thumb(videoid: str, player_username=None):
     except:
         thumb_path = None
 
-    # 🖤 BASE
+    # 🖤 BLACK BG
     bg = Image.new("RGB", (1280, 720), (0, 0, 0))
 
-    # 🔥 MULTI LAYER GLOW
-    glow1 = Image.new("RGB", (1280, 720), (0, 0, 0))
-    g1 = ImageDraw.Draw(glow1)
-    g1.ellipse((200, 50, 1100, 750), fill=(255, 120, 40))
-    glow1 = glow1.filter(ImageFilter.GaussianBlur(180))
-
-    glow2 = Image.new("RGB", (1280, 720), (0, 0, 0))
-    g2 = ImageDraw.Draw(glow2)
-    g2.ellipse((300, 150, 1000, 650), fill=(255, 80, 20))
-    glow2 = glow2.filter(ImageFilter.GaussianBlur(120))
-
-    bg = Image.blend(bg, glow1, 0.25)
-    bg = Image.blend(bg, glow2, 0.55)
+    # 🔥 PREMIUM GLOW BACKGROUND
+    glow = Image.new("RGB", (1280, 720), (0, 0, 0))
+    g = ImageDraw.Draw(glow)
+    g.ellipse((200, 50, 1100, 750), fill=(255, 120, 40))
+    glow = glow.filter(ImageFilter.GaussianBlur(200))
+    bg = Image.blend(bg, glow, 0.45)
 
     draw = ImageDraw.Draw(bg)
 
@@ -88,27 +81,27 @@ async def gen_thumb(videoid: str, player_username=None):
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, 420, 420), 40, fill=255)
     thumb.putalpha(mask)
 
-    # 🔥 SHADOW (FLOAT EFFECT)
+    # 🔥 SHADOW (FLOAT)
     shadow = Image.new("RGBA", (460, 460), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
     sd.rounded_rectangle((0, 0, 460, 460), 50, fill=(0, 0, 0, 180))
-    shadow = shadow.filter(ImageFilter.GaussianBlur(40))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(50))
     bg.paste(shadow, (110, 140), shadow)
 
-    # 🔥 BORDER
+    # 🔥 BORDER + GLOW
     border = Image.new("RGBA", (460, 460), (0, 0, 0, 0))
     bd = ImageDraw.Draw(border)
     bd.rounded_rectangle((0, 0, 460, 460), 50, outline=(255, 120, 40), width=5)
 
-    glow_border = border.filter(ImageFilter.GaussianBlur(25))
-    extra_glow = border.filter(ImageFilter.GaussianBlur(50))
+    glow1 = border.filter(ImageFilter.GaussianBlur(30))
+    glow2 = border.filter(ImageFilter.GaussianBlur(60))
 
-    bg.paste(extra_glow, (100, 130), extra_glow)
-    bg.paste(glow_border, (100, 130), glow_border)
+    bg.paste(glow2, (100, 130), glow2)
+    bg.paste(glow1, (100, 130), glow1)
     bg.paste(border, (100, 130), border)
     bg.paste(thumb, (120, 150), thumb)
 
-    # 🅵🅾🅽🆃🆂
+    # 🅵🅾🅽🆃
     try:
         title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)
         meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 30)
@@ -120,8 +113,9 @@ async def gen_thumb(videoid: str, player_username=None):
     draw.rounded_rectangle((600, 140, 830, 195), 25, fill=(255, 120, 40))
     draw.text((635, 152), "NOW PLAYING", fill="white", font=small_font)
 
-    # 🎵 TITLE
+    # 🎵 TITLE (GLOW EFFECT)
     title = trim(title, title_font, 550)
+    draw.text((602, 242), title, fill=(255,120,40), font=title_font)
     draw.text((600, 240), title, fill="white", font=title_font)
 
     draw.line((600, 300, 1000, 300), fill=(255, 120, 40), width=3)
@@ -144,7 +138,7 @@ async def gen_thumb(videoid: str, player_username=None):
 
     # 🔥 REFLECTION
     reflection = bg.crop((0, 350, 1280, 720)).transpose(Image.FLIP_TOP_BOTTOM)
-    reflection = reflection.filter(ImageFilter.GaussianBlur(25))
+    reflection = reflection.filter(ImageFilter.GaussianBlur(30))
 
     fade = Image.new("L", reflection.size, 120)
     reflection.putalpha(fade)
@@ -154,7 +148,6 @@ async def gen_thumb(videoid: str, player_username=None):
     # 🔥 BRANDING
     draw.text((820, 660), "Powered by Mr Thakur", fill=(255, 120, 40), font=small_font)
 
-    # cleanup
     try:
         if thumb_path and os.path.exists(thumb_path):
             os.remove(thumb_path)
