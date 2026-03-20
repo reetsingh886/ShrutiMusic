@@ -26,6 +26,7 @@ async def gen_thumb(videoid: str, player_username=None):
     if os.path.exists(path):
         return path
 
+    # 🔍 Fetch data
     try:
         results = VideosSearch(f"https://www.youtube.com/watch?v={videoid}", limit=1)
         data = (await results.next())["result"][0]
@@ -39,6 +40,7 @@ async def gen_thumb(videoid: str, player_username=None):
 
     thumb_path = f"{CACHE_DIR}/{videoid}.png"
 
+    # ⬇ Download thumbnail
     async with aiohttp.ClientSession() as s:
         async with s.get(thumb_url) as r:
             async with aiofiles.open(thumb_path, "wb") as f:
@@ -48,103 +50,104 @@ async def gen_thumb(videoid: str, player_username=None):
     bg = Image.new("RGBA", (1280, 720), (10, 15, 25))
 
     # center glow
-    glow = Image.new("RGBA", (1280, 720), (0,0,0,0))
+    glow = Image.new("RGBA", (1280, 720), (0, 0, 0, 0))
     g = ImageDraw.Draw(glow)
-    g.ellipse((250,100,1150,700), fill=(120,200,255,80))
+    g.ellipse((250, 100, 1150, 700), fill=(120, 200, 255, 80))
     glow = glow.filter(ImageFilter.GaussianBlur(180))
     bg = Image.alpha_composite(bg, glow)
 
     draw = ImageDraw.Draw(bg)
 
-    # ✨ smooth particles
-    for _ in range(50):
-        x = random.randint(0,1280)
-        y = random.randint(0,720)
-        size = random.randint(4,10)
+    # ✨ Smooth particles (FIXED)
+    for _ in range(40):
+        x = random.randint(0, 1280)
+        y = random.randint(0, 720)
+        size = random.randint(4, 8)
 
-        p = Image.new("RGBA",(size*3,size*3),(0,0,0,0))
-        pd = ImageDraw.Draw(p)
-        pd.ellipse((0,0,size*3,size*3), fill=(200,220,255,80))
-        p = p.filter(ImageFilter.GaussianBlur(4))
+        dot = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        d = ImageDraw.Draw(dot)
+        d.ellipse((0, 0, size, size), fill=(200, 220, 255, 120))
 
-        bg.paste(p,(x,y),p)
+        dot = dot.filter(ImageFilter.GaussianBlur(2))
+        bg.paste(dot, (x, y), dot)
 
-    # 🖼 thumbnail
-    thumb = Image.open(thumb_path).resize((420,420)).convert("RGBA")
+    # 🖼 Thumbnail
+    thumb = Image.open(thumb_path).convert("RGBA")
+    thumb = thumb.resize((420, 420), Image.LANCZOS)
 
-    mask = Image.new("L",(420,420),0)
-    ImageDraw.Draw(mask).rounded_rectangle((0,0,420,420),40,fill=255)
+    mask = Image.new("L", (420, 420), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, 420, 420), 40, fill=255)
     thumb.putalpha(mask)
 
-    border = Image.new("RGBA",(440,440),(0,0,0,0))
+    border = Image.new("RGBA", (440, 440), (0, 0, 0, 0))
     bd = ImageDraw.Draw(border)
-    bd.rounded_rectangle((0,0,440,440),50,outline=(120,200,255),width=4)
+    bd.rounded_rectangle((0, 0, 440, 440), 50, outline=(120, 200, 255), width=4)
 
-    bg.paste(border,(80,140),border)
-    bg.paste(thumb,(90,150),thumb)
+    bg.paste(border, (80, 140), border)
+    bg.paste(thumb, (90, 150), thumb)
 
-    # 🧊 REAL GLASS CARD
-    card = bg.crop((560,140,1260,490)).copy()
-    card = card.filter(ImageFilter.GaussianBlur(25))
+    # 🧊 REAL GLASS EFFECT (FIXED)
+    card = bg.crop((560, 140, 1260, 490)).copy()
+    card = card.filter(ImageFilter.GaussianBlur(30))
 
-    overlay = Image.new("RGBA",card.size,(255,255,255,35))
-    card = Image.alpha_composite(card,overlay)
+    overlay = Image.new("RGBA", card.size, (255, 255, 255, 25))
+    card = Image.alpha_composite(card, overlay)
 
-    bg.paste(card,(560,140))
+    bg.paste(card, (560, 140))
 
     draw = ImageDraw.Draw(bg)
 
-    # fonts
+    # 🔤 Fonts
     try:
-        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf",44)
-        meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf",28)
-        small_font = ImageFont.truetype("ShrutiMusic/assets/font2.ttf",24)
+        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)
+        meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 28)
+        small_font = ImageFont.truetype("ShrutiMusic/assets/font2.ttf", 24)
     except:
         title_font = meta_font = small_font = ImageFont.load_default()
 
-    # NOW PLAYING
-    draw.rounded_rectangle((600,110,820,160),25,fill=(50,50,60,200))
-    draw.text((630,120),"NOW PLAYING",fill=(230,230,230),font=small_font)
+    # 🎧 NOW PLAYING
+    draw.rounded_rectangle((600, 110, 820, 160), 25, fill=(50, 50, 60, 200))
+    draw.text((630, 120), "NOW PLAYING", fill=(230, 230, 230), font=small_font)
 
-    # Title
-    title = trim(title,title_font,500)
-    draw.text((600,200),title,fill="white",font=title_font)
-    draw.line((600,260,1000,260),fill=(120,200,255),width=2)
+    # 🎵 Title
+    title = trim(title, title_font, 500)
+    draw.text((600, 200), title, fill="white", font=title_font)
+    draw.line((600, 260, 1000, 260), fill=(120, 200, 255), width=2)
 
-    # Meta
-    draw.text((600,290),f"Duration: {duration}",fill=(200,200,200),font=meta_font)
-    draw.text((600,330),f"Views: {views}",fill=(200,200,200),font=meta_font)
-    draw.text((600,370),f"Player: @{player_username}",fill=(120,200,255),font=meta_font)
+    # 📊 Meta
+    draw.text((600, 290), f"Duration: {duration}", fill=(200, 200, 200), font=meta_font)
+    draw.text((600, 330), f"Views: {views}", fill=(200, 200, 200), font=meta_font)
+    draw.text((600, 370), f"Player: @{player_username}", fill=(120, 200, 255), font=meta_font)
 
-    # 🎚 progress
-    bar_x,bar_y = 600,460
+    # 🎚 Progress bar
+    bar_x, bar_y = 600, 460
     bar_w = 500
-    progress = bar_w//2
+    progress = bar_w // 2
 
-    draw.rounded_rectangle((bar_x,bar_y,bar_x+bar_w,bar_y+10),6,fill=(255,255,255,60))
-    draw.rounded_rectangle((bar_x,bar_y,bar_x+progress,bar_y+10),6,fill=(120,200,255))
+    draw.rounded_rectangle((bar_x, bar_y, bar_x + bar_w, bar_y + 10), 6, fill=(255, 255, 255, 60))
+    draw.rounded_rectangle((bar_x, bar_y, bar_x + progress, bar_y + 10), 6, fill=(120, 200, 255))
 
-    hx = bar_x+progress
-    hy = bar_y+5
+    hx = bar_x + progress
+    hy = bar_y + 5
 
-    # 💖 heart
-    draw.ellipse((hx-10,hy-10,hx,hy),fill=(120,200,255))
-    draw.ellipse((hx,hy-10,hx+10,hy),fill=(120,200,255))
-    draw.polygon([(hx-10,hy),(hx+10,hy),(hx,hy+18)],fill=(120,200,255))
+    # 💖 HEART (FIXED)
+    draw.ellipse((hx - 12, hy - 10, hx, hy), fill=(120, 200, 255))
+    draw.ellipse((hx, hy - 10, hx + 12, hy), fill=(120, 200, 255))
+    draw.polygon([(hx - 12, hy), (hx + 12, hy), (hx, hy + 20)], fill=(120, 200, 255))
 
     # glow
-    glow = Image.new("RGBA",(60,60),(0,0,0,0))
+    glow = Image.new("RGBA", (80, 80), (0, 0, 0, 0))
     g = ImageDraw.Draw(glow)
-    g.ellipse((0,0,60,60),fill=(120,200,255,150))
-    glow = glow.filter(ImageFilter.GaussianBlur(12))
-    bg.paste(glow,(hx-30,hy-20),glow)
+    g.ellipse((0, 0, 80, 80), fill=(120, 200, 255, 120))
+    glow = glow.filter(ImageFilter.GaussianBlur(20))
+    bg.paste(glow, (hx - 40, hy - 30), glow)
 
-    # time
-    draw.text((600,500),"00:00",fill=(200,200,200),font=small_font)
-    draw.text((1080,500),duration,fill=(200,200,200),font=small_font)
+    # ⏱ Time
+    draw.text((600, 500), "00:00", fill=(200, 200, 200), font=small_font)
+    draw.text((1080, 500), duration, fill=(200, 200, 200), font=small_font)
 
-    # branding
-    draw.text((900,650),"Powered by Mr Thakur",fill=(130,130,130),font=small_font)
+    # ⚡ Branding
+    draw.text((900, 650), "Powered by Mr Thakur", fill=(130, 130, 130), font=small_font)
 
     try:
         os.remove(thumb_path)
