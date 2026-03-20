@@ -10,15 +10,17 @@ CACHE_DIR = "cache"
 os.makedirs(CACHE_DIR, exist_ok=True)
 
 
-def trim(text, max_len=55):
-    return text[:max_len] + "..." if len(text) > max_len else text
+def trim(text, font, max_w):
+    while font.getlength(text) > max_w:
+        text = text[:-1]
+    return text + "..."
 
 
 async def gen_thumb(videoid: str, player_username=None):
     if player_username is None:
         player_username = app.username
 
-    path = f"{CACHE_DIR}/{videoid}_yt.png"
+    path = f"{CACHE_DIR}/{videoid}_red_clean.png"
     if os.path.exists(path):
         return path
 
@@ -28,11 +30,10 @@ async def gen_thumb(videoid: str, player_username=None):
 
         title = data["title"]
         thumb_url = data["thumbnails"][0]["url"]
-        duration = data.get("duration", "0:00")
+        duration = data.get("duration", "Live")
         views = data["viewCount"]["short"]
-        channel = data.get("channel", {}).get("name", "YouTube")
     except:
-        title, thumb_url, duration, views, channel = "Unknown", YOUTUBE_IMG_URL, "0:00", "0", "YouTube"
+        title, thumb_url, duration, views = "Unknown", YOUTUBE_IMG_URL, "Live", "0"
 
     thumb_path = f"{CACHE_DIR}/{videoid}.png"
 
@@ -41,45 +42,64 @@ async def gen_thumb(videoid: str, player_username=None):
             async with aiofiles.open(thumb_path, "wb") as f:
                 await f.write(await r.read())
 
-    # 🎨 Background (same grey)
-    bg = Image.new("RGB", (1280, 720), (55, 70, 75))
+    # 🎨 SOLID DARK BG (NO BLUR)
+    bg = Image.new("RGB", (1280, 720), (15, 10, 10))
     draw = ImageDraw.Draw(bg)
 
-    # 🖼 Thumbnail (center)
-    thumb = Image.open(thumb_path).resize((700, 380)).convert("RGB")
+    # 🖼 THUMB
+    thumb = Image.open(thumb_path).resize((420, 420)).convert("RGBA")
 
-    # rounded mask
-    mask = Image.new("L", (700, 380), 0)
-    ImageDraw.Draw(mask).rounded_rectangle((0, 0, 700, 380), 40, fill=255)
+    mask = Image.new("L", (420, 420), 0)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, 420, 420), 40, fill=255)
     thumb.putalpha(mask)
 
-    bg.paste(thumb, (290, 120), thumb)
+    # red border
+    border = Image.new("RGBA", (460, 460), (0, 0, 0, 0))
+    bd = ImageDraw.Draw(border)
+    bd.rounded_rectangle((0, 0, 460, 460), 50, outline=(255, 60, 60), width=8)
 
-    # ⏱ Vertical progress bar (left)
-    draw.rounded_rectangle((120, 120, 150, 500), 20, fill=(200, 200, 200))
-    draw.rounded_rectangle((120, 300, 150, 500), 20, fill=(255, 255, 255))
+    bg.paste(border, (100, 130), border)
+    bg.paste(thumb, (120, 150), thumb)
+
+    # fonts
+    try:
+        title_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 42)
+        meta_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 30)
+        small_font = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 26)
+    except:
+        title_font = meta_font = small_font = ImageFont.load_default()
+
+    # 🔴 NOW PLAYING
+    draw.rounded_rectangle((600, 140, 820, 190), 25, fill=(255, 60, 60))
+    draw.text((630, 150), "NOW PLAYING", fill="white", font=small_font)
+
+    # 🎵 TITLE (WHITE)
+    title = trim(title, title_font, 550)
+    draw.text((600, 230), title, fill="white", font=title_font)
+
+    # underline
+    draw.line((600, 290, 1000, 290), fill=(255, 60, 60), width=3)
+
+    # 📊 META (WHITE + RED MIX)
+    draw.text((600, 320), f"Duration: {duration}", fill="white", font=meta_font)
+    draw.text((600, 360), f"Views: {views}", fill=(255, 80, 80), font=meta_font)
+    draw.text((600, 400), f"Player: @{player_username}", fill=(255, 80, 80), font=meta_font)
+
+    # 🎚 PROGRESS BAR
+    bar_x, bar_y = 600, 470
+    bar_w = 500
+
+    draw.rounded_rectangle((bar_x, bar_y, bar_x+bar_w, bar_y+12), 6, fill=(255,255,255,80))
+    draw.rounded_rectangle((bar_x, bar_y, bar_x+bar_w//2, bar_y+12), 6, fill=(255,60,60))
+
+    draw.ellipse((bar_x+bar_w//2-8, bar_y-4, bar_x+bar_w//2+8, bar_y+16), fill="white")
 
     # time
-    try:
-        font_small = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 30)
-        font_title = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 44)
-        font_meta = ImageFont.truetype("ShrutiMusic/assets/font.ttf", 32)
-    except:
-        font_small = font_title = font_meta = ImageFont.load_default()
+    draw.text((600, 510), "00:00", fill="white", font=small_font)
+    draw.text((1080, 510), duration, fill="white", font=small_font)
 
-    draw.text((95, 80), duration, fill="white", font=font_small)
-    draw.text((95, 520), "00:00", fill="white", font=font_small)
-
-    # 🎵 Title
-    title = trim(title)
-    draw.text((250, 540), title, fill="white", font=font_title)
-
-    # 📊 Channel + views
-    meta = f"{channel}  |  {views} views"
-    draw.text((250, 600), meta, fill=(200, 200, 200), font=font_meta)
-
-    # ⚡ Branding (small)
-    draw.text((950, 670), "Powered by Mr Thakur", fill=(180, 180, 180), font=font_small)
+    # branding
+    draw.text((900, 660), "Powered by Mr Thakur", fill=(180,180,180), font=small_font)
 
     try:
         os.remove(thumb_path)
